@@ -17,6 +17,7 @@ namespace MRL_2
         InpN[] I;
 
         Neuron[][] H = new Neuron[2][];
+        int h = 24;
 
         OutN[] O;
 
@@ -26,8 +27,8 @@ namespace MRL_2
         {
             I = new InpN[(m * n)];
             O = new OutN[(m * n * acts)];
-            H[0] = new Neuron[24];
-            H[1] = new Neuron[24];
+            H[0] = new Neuron[h];
+            H[1] = new Neuron[h];
 
             for (int i = 0; i < m * n; i++)
             {
@@ -37,7 +38,7 @@ namespace MRL_2
             {
                 O[i] = new OutN(Rand.NextDouble());
             }
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
                 H[0][i] = new Neuron(Rand.NextDouble());
                 H[1][i] = new Neuron(Rand.NextDouble());
@@ -66,11 +67,11 @@ namespace MRL_2
             {
                 for (int j = 0; j < N; j++)
                 {
-                    I[i].SetInp = State[i, j];
+                    I[i * N + j].SetInp = State[i, j];
                 }
             }
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
                 for (int j = 0; j < M * N; j++)
                 {
@@ -81,9 +82,9 @@ namespace MRL_2
                 sum = 0;
             }
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
-                for (int j = 0; j < 24; j++)
+                for (int j = 0; j < h; j++)
                 {
                     sum += H[0][j].Outp() * W[1][j, i];
                 }
@@ -94,7 +95,7 @@ namespace MRL_2
 
             for (int i = 0; i < M * N * ACTS; i++)
             {
-                for (int j = 0; j < 24; j++)
+                for (int j = 0; j < h; j++)
                 {
                     sum += H[1][j].Outp() * W[2][j, i];
                 }

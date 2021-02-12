@@ -51,7 +51,8 @@ namespace MRL_2
 
         public new double Outp()
         {
-            return inp;
+            return (inp + 1) / 10.0;
+            //return inp;
         }
     }
 
@@ -72,9 +73,10 @@ namespace MRL_2
             return 1;
         }
 
-        public new double delta(double Id)
+        public new double delta(double Ideal)
         {
-            return this.MOR() * (Id - this.Outp());
+            //return this.MOR() * (Ideal - this.Outp()) * (Ideal - this.Outp());
+            return this.MOR() * (Ideal - this.Outp());
         }
     }
 }

@@ -36,15 +36,19 @@ namespace MRL_2
 
             NeuralNetwork NN = new NeuralNetwork(m, n, acts);
 
-            NN.Train(S, iters);
+            NN.Train(iters);
 
-            for (int i = 0; i < m; i++)
+            /*for (int i = 0; i < m; i++)
             {
                 for (int j = 0; j < n; j++)
                 {
                     S[i, j] = rand.Next(3);
                 }
-            }
+            }*/
+
+            MessageBox.Show("Обучение завершено.", "Обучение", MessageBoxButtons.OK);
+
+            S = NN.Result();
 
             Invalidate();
         }

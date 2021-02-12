@@ -16,7 +16,7 @@ namespace MRL_2
 
         double[][,] W = new double[3][,];
         double[][,] dW = new double[3][,];
-
+        
         int M;
         int N;
         int ACTS;
@@ -27,6 +27,7 @@ namespace MRL_2
         InpN[] I;
 
         Neuron[][] H = new Neuron[2][];
+        int h = 24;
 
         OutN[] O;
 
@@ -36,8 +37,8 @@ namespace MRL_2
         {
             I = new InpN[(m * n)];
             O = new OutN[(m * n * acts)];
-            H[0] = new Neuron[24];
-            H[1] = new Neuron[24];
+            H[0] = new Neuron[h];
+            H[1] = new Neuron[h];
 
             for(int i = 0; i < m*n; i++)
             {
@@ -47,7 +48,7 @@ namespace MRL_2
             {
                 O[i] = new OutN(Rand.NextDouble());
             }
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
                 H[0][i] = new Neuron(Rand.NextDouble());
                 H[1][i] = new Neuron(Rand.NextDouble());
@@ -55,30 +56,30 @@ namespace MRL_2
 
 
 
-            dW[0] = new double[m*n, 24];
-            dW[1] = new double[24, 24];
-            dW[2] = new double[24, m * n* acts];
+            dW[0] = new double[m*n, h];
+            dW[1] = new double[h, h];
+            dW[2] = new double[h, m * n* acts];
 
-            W[0] = new double[m * n, 24];
-            W[1] = new double[24, 24];
-            W[2] = new double[24, m * n * acts];
+            W[0] = new double[m * n, h];
+            W[1] = new double[h, h];
+            W[2] = new double[h, m * n * acts];
 
             for(int i = 0; i < (m * n); i++)
             {
-                for (int j = 0; j < 24; j++)
-                    W[0][i, j] = Rand.NextDouble();
+                for (int j = 0; j < h; j++)
+                    W[0][i, j] = Rand.Next(-10, 10) / 10.0;
             }
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < h; i++)
             {
-                for (int j = 0; j < 24; j++)
-                    W[1][i, j] = Rand.NextDouble();
+                for (int j = 0; j < h; j++)
+                    W[1][i, j] = Rand.Next(-10, 10) / 10.0;
             }
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
                 for (int j = 0; j < (m * n * acts); j++)
-                    W[2][i, j] = Rand.NextDouble();
+                    W[2][i, j] = Rand.Next(-10, 10) / 10.0;
             }
 
             M = m;
@@ -96,11 +97,11 @@ namespace MRL_2
             {
                 for (int j = 0; j < N; j++)
                 {
-                    I[i].SetInp = State[i, j];
+                    I[i * N + j].SetInp = State[i, j];
                 }
             }
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
                 for (int j = 0; j < M * N; j++)
                 {
@@ -111,9 +112,9 @@ namespace MRL_2
                 sum = 0;
             }
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
-                for (int j = 0; j < 24; j++)
+                for (int j = 0; j < h; j++)
                 {
                     sum += H[0][j].Outp() * W[1][j, i];
                 }
@@ -124,7 +125,7 @@ namespace MRL_2
 
             for (int i = 0; i < M * N * ACTS; i++)
             {
-                for (int j = 0; j < 24; j++)
+                for (int j = 0; j < h; j++)
                 {
                     sum += H[1][j].Outp() * W[2][j, i];
                 }
@@ -143,15 +144,24 @@ namespace MRL_2
             return OutRes;
         }
 
-        public void Result(double a, double b, double Ideal)
+        public int[,] Result()
         {
+            int[,] State = new int[M, N];
+            bool end = false;
 
+            for (int j = 0; j < (M * N * 3 / 2); j++)
+            {
+                Build(ref State, ARGMAX(Calculate(State)));
+
+                if (end)
+                    break;
+            }
+
+            return State;
         }
 
         public double Build(ref int[,] State, int[] StateAct, ref bool end)
         {
-            State[StateAct[0], StateAct[1]] = StateAct[2];
-
             double Rs = 0;
             bool earned;
 
@@ -168,9 +178,9 @@ namespace MRL_2
                         earned = true;
                     if (!earned && j > 0 && State[i, j - 1] == 2)
                         earned = true;
-                    if (!earned && i < 2 && State[i + 1, j] == 2)
+                    if (!earned && i < M - 1 && State[i + 1, j] == 2)
                         earned = true;
-                    if (!earned && j < 2 && State[i, j + 1] == 2)
+                    if (!earned && j < N - 1 && State[i, j + 1] == 2)
                         earned = true;
 
                     if (earned)
@@ -178,27 +188,36 @@ namespace MRL_2
                 }
             }
 
+            State[StateAct[0], StateAct[1]] = StateAct[2];
+
             return Rs;
         }
+
         public void Build(ref int[,] State, int[] StateAct)
         {
             State[StateAct[0], StateAct[1]] = StateAct[2];
         }
 
-        /*public void Build(ref int[,] State, int[] StateAct, ref bool end) 
-        {
-            //
-            State[StateAct[0], StateAct[1]] = StateAct[2];
-        }*/
-
-        public void Train(int[,] State, int iters)
+        public void Train(int iters)
         {
             TN.GetW = W;
             bool end = false;
 
+            int[,] State = new int[M, N];
+
             for (int i = 0; i < iters; i++)
             {
-                for (int j = 0; j < (M * N *  2); j++)
+                for(int k = 0; k < M; k++)
+                {
+                    for (int p = 0; p < N; p++)
+                    {
+                        State[k, p] = 0;
+                    }
+                }
+
+                end = false;
+
+                for (int j = 0; j < (M * N *  3 / 2); j++)
                 {
                     Iter(ref State, ref end);
 
@@ -207,11 +226,17 @@ namespace MRL_2
                 }
             }
 
-            double[] Test = this.Calculate(State);
+            for (int k = 0; k < M; k++)
+            {
+                for (int p = 0; p < N; p++)
+                {
+                    State[k, p] = 0;
+                }
+            }
 
-            Test[5] = 1;
+            double[] TESTQ = Calculate(State);
 
-
+            TESTQ[5] = 1;
         }
 
         public void Iter(ref int[,] State, ref bool end)
@@ -222,14 +247,14 @@ namespace MRL_2
                 step = 0;
             }
 
-            double[] Q = this.Calculate(State);
+            double[] Q;
+
+            int[] Act = new int[3];
+
             double R;
 
-            int ML = Q.Length / M;
-            int NL = ML / N;
-
             if (Rand.NextDouble() < eps)
-            {// рандом
+            {
                 int[] randA = new int[3];
                 randA[0] = Rand.Next(M);
                 randA[1] = Rand.Next(N);
@@ -239,56 +264,50 @@ namespace MRL_2
             }
             else
             {
-                double MaxA = Q[0];
-                int[] MaxAInd = new int[3];
+                Q = this.Calculate(State);
 
-                for (int i = 0; i < M; i++)
-                {
-                    for (int j = 0; j < N; j++)
-                    {
-                        for (int k = 0; k < ACTS; k++)
-                        {
-                            if(MaxA < Q[ML * i + NL * j + k])
-                            {
-                                MaxA = Q[ML * i + NL * j + k];
-                                MaxAInd[0] = i;
-                                MaxAInd[1] = j;
-                                MaxAInd[2] = k;
-                            }
-                        }
-                    }
-                }
+                Act = ARGMAX(Q);
 
-                R = Build(ref State, MaxAInd, ref end);
+                R = Build(ref State, Act, ref end);
             }
 
             double[] Ideal = new double[M * N * ACTS];
-            double[] TQ;
             int[,] NextState = new int [M, N];
             NextState = State;
-            int[] Act = new int[3];
 
-            for(int i = 0; i < M * N * ACTS; i++)
+
+            for (int i = 0; i < M; i++)
             {
-                Act[0] = i / ML;
-                Act[1] = i / NL;
+                for (int j = 0; j < N; j++)
+                {
+                    for (int k = 0; k < ACTS; k++)
+                    {
+                        NextState = State;
 
+                        Act[0] = i;
+                        Act[1] = j;
+                        Act[2] = k;
+
+                        Build(ref NextState, Act);
+
+                        Q = TN.Calculate(NextState);
+
+                        int ML = Q.Length / M;
+                        int NL = ML / N;
+
+                        Ideal[ML * i + NL * j + k] = R + D * MAX(Q);
+                    }
+                }
             }
 
 
             double[][] del = new double[2][];
-            del[0] = new double[24];
-            del[1] = new double[24];
-
-
-            for(int i = 0; i < M * N * ACTS; i++)
-            {
-                Ideal[i] = 1;
-            }
+            del[0] = new double[h];
+            del[1] = new double[h];
 
             double sum = 0;
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
                 for (int j = 0; j < M * N * ACTS; j++)
                 {
@@ -299,9 +318,9 @@ namespace MRL_2
                 sum = 0;
             }
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
-                for (int j = 0; j < 24; j++)
+                for (int j = 0; j < h; j++)
                 {
                     sum += del[1][j] * W[1][i, j];
                 }
@@ -312,23 +331,23 @@ namespace MRL_2
 
             for (int i = 0; i < M*N; i++)
             {
-                for (int j = 0; j < 24; j++)
+                for (int j = 0; j < h; j++)
                 {
                     dW[0][i, j] = A * dW[0][i, j] + E * I[i].Outp() * del[0][j];
                     W[0][i, j] += dW[0][i, j];
                 }
             }
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
-                for (int j = 0; j < 24; j++)
+                for (int j = 0; j < h; j++)
                 {
                     dW[1][i, j] = A * dW[1][i, j] + E * H[0][i].Outp() * del[1][j];
                     W[1][i, j] += dW[1][i, j];
                 }
             }
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < h; i++)
             {
                 for (int j = 0; j < M * N * ACTS; j++)
                 {
@@ -336,6 +355,60 @@ namespace MRL_2
                     W[2][i, j] += dW[2][i, j];
                 }
             }
+
+            step++;
+        }
+
+        public int[] ARGMAX(double[] Q)
+        {
+            double MaxA = Q[0];
+            int[] MaxAInd = new int[3];
+
+            int ML = Q.Length / M;
+            int NL = ML / N;
+
+            for (int i = 0; i < M; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    for (int k = 0; k < ACTS; k++)
+                    {
+                        if (MaxA < Q[ML * i + NL * j + k])
+                        {
+                            MaxA = Q[ML * i + NL * j + k];
+                            MaxAInd[0] = i;
+                            MaxAInd[1] = j;
+                            MaxAInd[2] = k;
+                        }
+                    }
+                }
+            }
+
+            return MaxAInd;
+        }
+
+        public double MAX(double[] Q)
+        {
+            double MaxA = Q[0];
+
+            int ML = Q.Length / M;
+            int NL = ML / N;
+
+            for (int i = 0; i < M; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    for (int k = 0; k < ACTS; k++)
+                    {
+                        if (MaxA < Q[ML * i + NL * j + k])
+                        {
+                            MaxA = Q[ML * i + NL * j + k];
+                        }
+                    }
+                }
+            }
+
+            return MaxA;
         }
     }
 }

@@ -31,7 +31,6 @@ namespace MRL_1
         // Обучение агента при запуске
         public Form1()
         {
-
             InitializeComponent();
 
             bool end;
