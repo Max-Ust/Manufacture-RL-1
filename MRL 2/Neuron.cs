@@ -51,7 +51,7 @@ namespace MRL_2
 
         public new double Outp()
         {
-            return (inp + 1) / 10.0;
+            return inp / 10.0;
             //return inp;
         }
     }

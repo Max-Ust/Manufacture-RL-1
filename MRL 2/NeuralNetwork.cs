@@ -12,7 +12,7 @@ namespace MRL_2
         public const double A = 0.3;
         public const double eps = 0.5;
         public const double D = 0.8;
-        public const int TargetStep = 5;
+        public const int TargetStep = 10;
 
         double[][,] W = new double[3][,];
         double[][,] dW = new double[3][,];
@@ -56,27 +56,27 @@ namespace MRL_2
 
 
 
-            dW[0] = new double[m*n, h];
-            dW[1] = new double[h, h];
-            dW[2] = new double[h, m * n* acts];
+            dW[0] = new double[m * n + 1, h];
+            dW[1] = new double[h + 1, h];
+            dW[2] = new double[h + 1, m * n* acts];
 
-            W[0] = new double[m * n, h];
-            W[1] = new double[h, h];
-            W[2] = new double[h, m * n * acts];
+            W[0] = new double[m * n + 1, h];
+            W[1] = new double[h + 1, h];
+            W[2] = new double[h + 1, m * n * acts];
 
-            for(int i = 0; i < (m * n); i++)
+            for(int i = 0; i < (m * n) + 1; i++)
             {
                 for (int j = 0; j < h; j++)
                     W[0][i, j] = Rand.Next(-10, 10) / 10.0;
             }
 
-            for (int i = 0; i < h; i++)
+            for (int i = 0; i < h + 1; i++)
             {
                 for (int j = 0; j < h; j++)
                     W[1][i, j] = Rand.Next(-10, 10) / 10.0;
             }
 
-            for (int i = 0; i < h; i++)
+            for (int i = 0; i < h + 1; i++)
             {
                 for (int j = 0; j < (m * n * acts); j++)
                     W[2][i, j] = Rand.Next(-10, 10) / 10.0;
@@ -108,6 +108,8 @@ namespace MRL_2
                     sum += I[j].Outp() * W[0][j, i];
                 }
 
+                sum += W[0][M * N, i];
+
                 H[0][i].SetInp = sum;
                 sum = 0;
             }
@@ -119,6 +121,8 @@ namespace MRL_2
                     sum += H[0][j].Outp() * W[1][j, i];
                 }
 
+                sum += W[1][h, i];
+
                 H[1][i].SetInp = sum;
                 sum = 0;
             }
@@ -129,6 +133,8 @@ namespace MRL_2
                 {
                     sum += H[1][j].Outp() * W[2][j, i];
                 }
+
+                sum += W[2][h, i];
 
                 O[i].SetInp = sum;
                 sum = 0;
@@ -151,7 +157,7 @@ namespace MRL_2
 
             for (int j = 0; j < (M * N * 3 / 2); j++)
             {
-                Build(ref State, ARGMAX(Calculate(State)));
+                BuildRes(ref State, ARGMAX(Calculate(State)), ref end);
 
                 if (end)
                     break;
@@ -193,7 +199,7 @@ namespace MRL_2
             return Rs;
         }
 
-        public void Build(ref int[,] State, int[] StateAct)
+        public void BuildRes(ref int[,] State, int[] StateAct, ref bool end)
         {
             State[StateAct[0], StateAct[1]] = StateAct[2];
         }
@@ -288,7 +294,7 @@ namespace MRL_2
                         Act[1] = j;
                         Act[2] = k;
 
-                        Build(ref NextState, Act);
+                        BuildRes(ref NextState, Act, ref end);
 
                         Q = TN.Calculate(NextState);
 
@@ -302,8 +308,8 @@ namespace MRL_2
 
 
             double[][] del = new double[2][];
-            del[0] = new double[h];
-            del[1] = new double[h];
+            del[0] = new double[h + 1];
+            del[1] = new double[h + 1];
 
             double sum = 0;
 
@@ -337,6 +343,11 @@ namespace MRL_2
                     W[0][i, j] += dW[0][i, j];
                 }
             }
+            for (int j = 0; j < h; j++)
+            {
+                dW[0][M * N, j] = A * dW[0][M * N, j] + E * del[0][j];
+                W[0][M * N, j] += dW[0][M * N, j];
+            }
 
             for (int i = 0; i < h; i++)
             {
@@ -346,6 +357,11 @@ namespace MRL_2
                     W[1][i, j] += dW[1][i, j];
                 }
             }
+            for (int j = 0; j < h; j++)
+            {
+                dW[1][h, j] = A * dW[1][h, j] + E * del[1][j];
+                W[1][h, j] += dW[1][h, j];
+            }
 
             for (int i = 0; i < h; i++)
             {
@@ -354,6 +370,11 @@ namespace MRL_2
                     dW[2][i, j] = A * dW[2][i, j] + E * H[1][i].Outp() * O[j].delta(Ideal[j]);
                     W[2][i, j] += dW[2][i, j];
                 }
+            }
+            for (int j = 0; j < M * N * ACTS; j++)
+            {
+                dW[2][h, j] = A * dW[2][h, j] + E * O[j].delta(Ideal[j]);
+                W[2][h, j] += dW[2][h, j];
             }
 
             step++;

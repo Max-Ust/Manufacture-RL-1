@@ -78,6 +78,8 @@ namespace MRL_2
                     sum += I[j].Outp() * W[0][j, i];
                 }
 
+                sum += W[0][M * N, i];
+
                 H[0][i].SetInp = sum;
                 sum = 0;
             }
@@ -89,6 +91,8 @@ namespace MRL_2
                     sum += H[0][j].Outp() * W[1][j, i];
                 }
 
+                sum += W[1][h, i];
+
                 H[1][i].SetInp = sum;
                 sum = 0;
             }
@@ -99,6 +103,8 @@ namespace MRL_2
                 {
                     sum += H[1][j].Outp() * W[2][j, i];
                 }
+
+                sum += W[2][h, i];
 
                 O[i].SetInp = sum;
                 sum = 0;

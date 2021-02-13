@@ -15,7 +15,7 @@ namespace MRL_1
         static Random rand = new Random();
 
         double A = 0.9; // Скорость обучение (альфа)
-        double D = 0.8; // Диксконт фактор
+        double D = 0.8; // Дисконт фактор
         double E = 0.5; // Эпсилон
         int iters = 50000; // Число итераций
 
