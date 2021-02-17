@@ -14,7 +14,7 @@ namespace MRL_2
     {
         static Random rand = new Random();
 
-        int iters = 10000;
+        int iters = 30;
         int m = 3;
         int n = 3;
         int acts = 3;

@@ -17,7 +17,7 @@ namespace MRL_2
         InpN[] I;
 
         Neuron[][] H = new Neuron[2][];
-        int h = 24;
+        int h = 30;
 
         OutN[] O;
 

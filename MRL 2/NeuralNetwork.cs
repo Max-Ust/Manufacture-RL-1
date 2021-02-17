@@ -8,11 +8,11 @@ namespace MRL_2
 {
     class NeuralNetwork
     {
-        public const double E = 0.7;
-        public const double A = 0.3;
-        public const double eps = 0.5;
-        public const double D = 0.8;
-        public const int TargetStep = 10;
+        public const double E = 0.1;
+        public const double A = 0.1;
+        public const double eps = 0.8;
+        public const double D = 0.9;
+        public const int TargetStep = 3;
 
         double[][,] W = new double[3][,];
         double[][,] dW = new double[3][,];
@@ -27,7 +27,7 @@ namespace MRL_2
         InpN[] I;
 
         Neuron[][] H = new Neuron[2][];
-        int h = 24;
+        int h = 30;
 
         OutN[] O;
 
@@ -171,6 +171,8 @@ namespace MRL_2
             double Rs = 0;
             bool earned;
 
+            State[StateAct[0], StateAct[1]] = StateAct[2];
+
             for (int i = 0; i < M; i++)
             {
                 for (int j = 0; j < N; j++)
@@ -194,9 +196,7 @@ namespace MRL_2
                 }
             }
 
-            State[StateAct[0], StateAct[1]] = StateAct[2];
-
-            return Rs;
+            return Rs / 10.0;
         }
 
         public void BuildRes(ref int[,] State, int[] StateAct, ref bool end)
@@ -261,6 +261,8 @@ namespace MRL_2
 
             if (Rand.NextDouble() < eps)
             {
+                this.Calculate(State);
+
                 int[] randA = new int[3];
                 randA[0] = Rand.Next(M);
                 randA[1] = Rand.Next(N);
@@ -279,8 +281,6 @@ namespace MRL_2
 
             double[] Ideal = new double[M * N * ACTS];
             int[,] NextState = new int [M, N];
-            NextState = State;
-
 
             for (int i = 0; i < M; i++)
             {
@@ -288,7 +288,14 @@ namespace MRL_2
                 {
                     for (int k = 0; k < ACTS; k++)
                     {
-                        NextState = State;
+
+                        for (int p = 0; p < M; p++)
+                        {
+                            for (int l = 0; l < N; l++)
+                            {
+                                NextState[i, j] = State[i, j];
+                            }
+                        }
 
                         Act[0] = i;
                         Act[1] = j;
@@ -313,25 +320,25 @@ namespace MRL_2
 
             double sum = 0;
 
-            for (int i = 0; i < h; i++)
+            for (int i = 0; i < h + 1; i++)
             {
                 for (int j = 0; j < M * N * ACTS; j++)
                 {
                     sum += O[j].delta(Ideal[j]) * W[2][i, j];
                 }
 
-                del[1][i] = H[1][i].delta(sum);
+                del[1][i] = H[1][0].delta(sum);
                 sum = 0;
             }
 
-            for (int i = 0; i < h; i++)
+            for (int i = 0; i < h + 1; i++)
             {
                 for (int j = 0; j < h; j++)
                 {
                     sum += del[1][j] * W[1][i, j];
                 }
 
-                del[0][i] = H[0][i].delta(sum);
+                del[0][i] = H[0][0].delta(sum);
                 sum = 0;
             }
 
@@ -345,7 +352,7 @@ namespace MRL_2
             }
             for (int j = 0; j < h; j++)
             {
-                dW[0][M * N, j] = A * dW[0][M * N, j] + E * del[0][j];
+                dW[0][M * N, j] = A * dW[0][M * N, j] + E * 1 * del[0][j];
                 W[0][M * N, j] += dW[0][M * N, j];
             }
 
@@ -359,7 +366,7 @@ namespace MRL_2
             }
             for (int j = 0; j < h; j++)
             {
-                dW[1][h, j] = A * dW[1][h, j] + E * del[1][j];
+                dW[1][h, j] = A * dW[1][h, j] + E * 1 * del[1][j];
                 W[1][h, j] += dW[1][h, j];
             }
 
@@ -373,7 +380,7 @@ namespace MRL_2
             }
             for (int j = 0; j < M * N * ACTS; j++)
             {
-                dW[2][h, j] = A * dW[2][h, j] + E * O[j].delta(Ideal[j]);
+                dW[2][h, j] = A * dW[2][h, j] + E * 1 * O[j].delta(Ideal[j]);
                 W[2][h, j] += dW[2][h, j];
             }
 

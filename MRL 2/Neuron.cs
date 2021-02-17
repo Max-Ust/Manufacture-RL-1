@@ -14,10 +14,6 @@ namespace MRL_2
         {
             this.inp = inp;
         }
-        public Neuron()
-        {
-            inp = 0.25;
-        }
         public double Outp()
         {
             return 1 / (1 + Math.Pow(Math.E, -1 * inp));
@@ -51,7 +47,7 @@ namespace MRL_2
 
         public new double Outp()
         {
-            return inp / 10.0;
+            return (inp + 1) / 10.0;
             //return inp;
         }
     }
