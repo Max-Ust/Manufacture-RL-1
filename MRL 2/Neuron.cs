@@ -14,17 +14,19 @@ namespace MRL_2
         {
             this.inp = inp;
         }
-        public double Outp()
+        public double Outp() // Функция активации
         {
             return 1 / (1 + Math.Pow(Math.E, -1 * inp));
+            // return (-1 + Math.Pow(Math.E, 2 * inp)) / (1 + Math.Pow(Math.E, 2 * inp));
         }
 
-        public double MOR()
+        public double MOR() // Функция обратного распространения
         {
             return (1 - this.Outp()) * this.Outp();
+            // return 1 - this.Outp() * this.Outp();
         }
 
-        public double delta(double sum)
+        public double delta(double sum) // Дельта
         {
             return this.MOR() * sum;
         }
@@ -71,7 +73,6 @@ namespace MRL_2
 
         public new double delta(double Ideal)
         {
-            //return this.MOR() * (Ideal - this.Outp()) * (Ideal - this.Outp());
             return this.MOR() * (Ideal - this.Outp());
         }
     }

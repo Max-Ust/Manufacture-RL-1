@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MRL_2
 {
-    class TargetNetwork
+    class TargetNetwork // Нейросеть цели
     {
         double[][,] W = new double[3][,];
 

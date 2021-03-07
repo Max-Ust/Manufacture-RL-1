@@ -8,21 +8,22 @@ namespace MRL_2
 {
     class NeuralNetwork
     {
-        public const double E = 0.1;
-        public const double A = 0.1;
-        public const double eps = 0.8;
-        public const double D = 0.9;
-        public const int TargetStep = 3;
+        public const double E = 0.1; // Момент
+        public const double A = 0.1; // Скорость обучения
+        public const double eps = 0.8; // Эпсилон
+        public const double D = 0.9; // Дисконт фактор
+        public const int TargetStep = 5; // Постоянная нейросети цели
 
-        double[][,] W = new double[3][,];
-        double[][,] dW = new double[3][,];
+        double[][,] W = new double[3][,]; // Вес
+        double[][,] dW = new double[3][,]; // Величина изменения весов
         
-        int M;
-        int N;
-        int ACTS;
+        int M; // Ширина
+        int N; // Высота
+        int ACTS; // Количество действий
 
-        int step = 0;
-        TargetNetwork TN;
+        int step = 0; // Шаг нейросети цели
+
+        TargetNetwork TN; // Нейросеть цели
 
         InpN[] I;
 
@@ -35,6 +36,8 @@ namespace MRL_2
 
         public NeuralNetwork(int m, int n, int acts)
         {
+            // Инициализация нейронов, весов и нейросети цели
+
             I = new InpN[(m * n)];
             O = new OutN[(m * n * acts)];
             H[0] = new Neuron[h];
@@ -89,6 +92,8 @@ namespace MRL_2
             TN = new TargetNetwork(W, M, N, ACTS);
         }
         
+
+        // Рассчет нейросети
         public double[] Calculate(int[,] State)
         {
             double sum = 0;
@@ -150,6 +155,8 @@ namespace MRL_2
             return OutRes;
         }
 
+
+        // Получение итогового результата
         public int[,] Result()
         {
             int[,] State = new int[M, N];
@@ -166,6 +173,7 @@ namespace MRL_2
             return State;
         }
 
+        // Построение
         public double Build(ref int[,] State, int[] StateAct, ref bool end)
         {
             double Rs = 0;
@@ -196,7 +204,7 @@ namespace MRL_2
                 }
             }
 
-            return Rs / 10.0;
+            return Rs;
         }
 
         public void BuildRes(ref int[,] State, int[] StateAct, ref bool end)
@@ -204,6 +212,8 @@ namespace MRL_2
             State[StateAct[0], StateAct[1]] = StateAct[2];
         }
 
+
+        // Тренировка нейросети
         public void Train(int iters)
         {
             TN.GetW = W;
@@ -245,9 +255,11 @@ namespace MRL_2
             TESTQ[5] = 1;
         }
 
+
+        // Итерация
         public void Iter(ref int[,] State, ref bool end)
         {
-            if (TargetStep == step)
+            if (TargetStep == step) // Обновления нейросети цели
             {
                 TN.GetW = W;
                 step = 0;
@@ -259,7 +271,17 @@ namespace MRL_2
 
             double R;
 
-            if (Rand.NextDouble() < eps)
+            /*int[,] PrevState = new int[M, N];
+
+            for (int i = 0; i < M; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    PrevState[i, j] = State[i, j];
+                }
+            }*/
+
+            /*if (Rand.NextDouble() < eps) // Реализация эпсилон-жадности
             {
                 this.Calculate(State);
 
@@ -277,10 +299,13 @@ namespace MRL_2
                 Act = ARGMAX(Q);
 
                 R = Build(ref State, Act, ref end);
-            }
+            }*/
+
+            this.Calculate(State);
 
             double[] Ideal = new double[M * N * ACTS];
-            int[,] NextState = new int [M, N];
+
+            int[,] NextState = new int[M, N];
 
             for (int i = 0; i < M; i++)
             {
@@ -293,7 +318,7 @@ namespace MRL_2
                         {
                             for (int l = 0; l < N; l++)
                             {
-                                NextState[i, j] = State[i, j];
+                                NextState[p, l] = State[p, l]; ////
                             }
                         }
 
@@ -301,18 +326,19 @@ namespace MRL_2
                         Act[1] = j;
                         Act[2] = k;
 
-                        BuildRes(ref NextState, Act, ref end);
+                        R = Build(ref NextState, Act, ref end);
 
                         Q = TN.Calculate(NextState);
 
                         int ML = Q.Length / M;
                         int NL = ML / N;
 
-                        Ideal[ML * i + NL * j + k] = R + D * MAX(Q);
+                        Ideal[ML * i + NL * j + k] = R + D * MAX(Q); // Применение уравнения Беллмана
                     }
                 }
             }
 
+            // Обновление весов методом обратного распространения ошибки
 
             double[][] del = new double[2][];
             del[0] = new double[h + 1];
@@ -385,6 +411,26 @@ namespace MRL_2
             }
 
             step++;
+
+            if (Rand.NextDouble() < eps) // Реализация эпсилон-жадности
+            {
+                this.Calculate(State);
+
+                int[] randA = new int[3];
+                randA[0] = Rand.Next(M);
+                randA[1] = Rand.Next(N);
+                randA[2] = Rand.Next(ACTS);
+
+                BuildRes(ref State, randA, ref end);
+            }
+            else
+            {
+                Q = this.Calculate(State);
+
+                Act = ARGMAX(Q);
+
+                BuildRes(ref State, Act, ref end);
+            }
         }
 
         public int[] ARGMAX(double[] Q)
