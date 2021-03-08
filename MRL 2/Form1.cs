@@ -10,6 +10,9 @@ using System.Windows.Forms;
 
 namespace MRL_2
 {
+    // Это вторая версия программы, на данный момент находится на стадии разработки
+
+
     public partial class Form1 : Form
     {
         static Random rand = new Random();
