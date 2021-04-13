@@ -17,14 +17,16 @@ namespace MRL_2
         InpN[] I;
 
         Neuron[][] H = new Neuron[2][];
-        int h = 30;
+        int h;
 
         OutN[] O;
 
         static Random Rand = new Random();
 
-        public TargetNetwork(double[][,] NewW, int m, int n, int acts)
+        public TargetNetwork(double[][,] NewW, int m, int n, int acts, int newH)
         {
+            h = newH;
+
             I = new InpN[(m * n)];
             O = new OutN[(m * n * acts)];
             H[0] = new Neuron[h];
@@ -61,6 +63,9 @@ namespace MRL_2
 
         public double[] Calculate(int[,] State)
         {
+            int ML = N * ACTS;
+            int NL = ACTS;
+
             double sum = 0;
 
             for (int i = 0; i < M; i++)
@@ -71,16 +76,24 @@ namespace MRL_2
                 }
             }
 
-            for (int i = 0; i < h; i++)
+            for (int k = 0; k < h; k++)
             {
-                for (int j = 0; j < M * N; j++)
+                /*for (int j = 0; j < M * N; j++)
                 {
                     sum += I[j].Outp() * W[0][j, i];
+                }*/
+
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        sum += I[i * N + j].Outp() * W[0][i * N + j, k];
+                    }
                 }
 
-                sum += W[0][M * N, i];
+                sum += W[0][M * N, k];
 
-                H[0][i].SetInp = sum;
+                H[0][k].SetInp = sum;
                 sum = 0;
             }
 
@@ -97,24 +110,34 @@ namespace MRL_2
                 sum = 0;
             }
 
-            for (int i = 0; i < M * N * ACTS; i++)
+            for (int i = 0; i < M; i++)
             {
-                for (int j = 0; j < h; j++)
+                for (int j = 0; j < N; j++)
                 {
-                    sum += H[1][j].Outp() * W[2][j, i];
+                    for (int k = 0; k < ACTS; k++)
+                    {
+                        for (int l = 0; l < h; l++)
+                            sum += H[1][l].Outp() * W[2][l, ML * i + NL * j + k];
+
+
+                        sum += W[2][h, ML * i + NL * j + k];
+
+                        O[ML * i + NL * j + k].SetInp = sum;
+                    }
                 }
-
-                sum += W[2][h, i];
-
-                O[i].SetInp = sum;
-                sum = 0;
             }
 
             double[] OutRes = new double[M * N * ACTS];
 
-            for (int i = 0; i < M * N * ACTS; i++)
+            for (int i = 0; i < M; i++)
             {
-                OutRes[i] = O[i].Outp();
+                for (int j = 0; j < N; j++)
+                {
+                    for (int k = 0; k < ACTS; k++)
+                    {
+                        OutRes[ML * i + NL * j + k] = O[ML * i + NL * j + k].Outp();
+                    }
+                }
             }
 
             return OutRes;

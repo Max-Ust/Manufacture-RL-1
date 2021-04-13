@@ -10,19 +10,18 @@ using System.Windows.Forms;
 
 namespace MRL_2
 {
-    // Это вторая версия программы, на данный момент находится на стадии разработки
-
+    // Здесь представлена вторая версия программы, которая на данный момент находится на стадии разработки
 
     public partial class Form1 : Form
     {
         static Random rand = new Random();
 
-        int iters = 30;
-        int m = 3;
-        int n = 3;
-        int acts = 3;
+        int iters = 1000; // Число итераций
+        int m = 2; // Ширина
+        int n = 1; // Высота
+        int acts = 3; // Кол-во возможных объектов (включая пустое поле)
 
-        int[,] S = new int[3, 3];
+        int[,] S = new int[2, 1];
 
         bool[] Rules = new bool[3]; //
 
@@ -33,7 +32,7 @@ namespace MRL_2
             DoubleBuffered = true;
         }
 
-        private void обучитьToolStripMenuItem_Click(object sender, EventArgs e)
+        private void обучитьToolStripMenuItem_Click(object sender, EventArgs e) // Создание нейросети и ее обучение
         {
             S = new int[m, n];
 
@@ -49,14 +48,14 @@ namespace MRL_2
                 }
             }*/
 
-            MessageBox.Show("Обучение завершено.", "Обучение", MessageBoxButtons.OK);
+            // MessageBox.Show("Обучение завершено.", "Обучение", MessageBoxButtons.OK);
 
             S = NN.Result();
 
             Invalidate();
         }
 
-        private void размерПоляToolStripMenuItem_Click(object sender, EventArgs e)
+        private void размерПоляToolStripMenuItem_Click(object sender, EventArgs e) // Окно изменения размеров поля
         {
             Size SZ = new Size(m, n);
 
@@ -72,7 +71,7 @@ namespace MRL_2
             Invalidate();
         }
 
-        private void правилаToolStripMenuItem_Click(object sender, EventArgs e)
+        private void правилаToolStripMenuItem_Click(object sender, EventArgs e) // Окно выбора параметров обучения
         {
             RulesForm RForm = new RulesForm(Rules);
 
@@ -84,7 +83,7 @@ namespace MRL_2
             }
         }
 
-        private void числоИтерацийToolStripMenuItem_Click(object sender, EventArgs e)
+        private void числоИтерацийToolStripMenuItem_Click(object sender, EventArgs e) // Окно изменения числа итераций
         {
             Iterations IForm = new Iterations(iters);
 
@@ -96,7 +95,7 @@ namespace MRL_2
             }
         }
 
-        private void Form1_Paint(object sender, PaintEventArgs e)
+        private void Form1_Paint(object sender, PaintEventArgs e) // Прорисовка поля; O обозначает завод первого этапа обработки, X — второго
         {
             int block;
 

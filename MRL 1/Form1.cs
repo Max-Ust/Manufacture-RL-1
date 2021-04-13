@@ -179,8 +179,6 @@ namespace MRL_1
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
-            // O — "шахта", X — "завод"
-
             if (S[0, 0] == 0)
                 textBox1.Text = " ";
             else if (S[0, 0] == 1)
