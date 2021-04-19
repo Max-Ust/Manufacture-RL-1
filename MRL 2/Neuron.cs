@@ -16,17 +16,11 @@ namespace MRL_2
         }
         public double Outp() // Функция активации
         {
-            //return 1 / (1 + Math.Pow(Math.E, -1 * inp));
-
-            //return Math.Max(0.0, inp);
-
             return inp;
         }
 
         public double MOR() // Функция обратного распространения
         {
-            //return (1 - this.Outp()) * this.Outp();
-
             return 1;
         }
 
@@ -54,7 +48,6 @@ namespace MRL_2
         public new double Outp()
         {
             return (inp + 1) / 10.0;
-            //return inp;
         }
     }
 

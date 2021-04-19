@@ -109,5 +109,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Conveyor.bmp" />
+    <Content Include="ThirdFactory.bmp" />
+    <Content Include="FirstFactory.bmp" />
+    <Content Include="SecondFactory.bmp" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

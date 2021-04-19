@@ -10,45 +10,49 @@ using System.Windows.Forms;
 
 namespace MRL_2
 {
-    // Здесь представлена вторая версия программы, которая на данный момент находится на стадии разработки
+    // Здесь представлена вторая версия программы
 
     public partial class Form1 : Form
     {
         static Random rand = new Random();
 
-        int iters = 1000; // Число итераций
-        int m = 2; // Ширина
-        int n = 1; // Высота
+        int iters = 100000; // Число итераций
+        int m = 3; // Ширина
+        int n = 3; // Высота
         int acts = 3; // Кол-во возможных объектов (включая пустое поле)
 
-        int[,] S = new int[2, 1];
+        int[,] S;
 
-        bool[] Rules = new bool[3]; //
+        Image FirstF = Image.FromFile("FirstFactory.bmp");
+        Image SecondF = Image.FromFile("SecondFactory.bmp");
+        Image ThirdF = Image.FromFile("ThirdFactory.bmp");
+        Image Conveyor = Image.FromFile("Conveyor.bmp");
+
+        bool[] Rules = new bool[2];
 
         public Form1()
         {
             InitializeComponent();
 
             DoubleBuffered = true;
+
+            S = new int[m, n];
+
+            Rules[0] = false;
+            Rules[1] = false;
         }
 
         private void обучитьToolStripMenuItem_Click(object sender, EventArgs e) // Создание нейросети и ее обучение
         {
             S = new int[m, n];
 
-            NeuralNetwork NN = new NeuralNetwork(m, n, acts);
+            NeuralNetwork NN = new NeuralNetwork(m, n, acts, Rules);
 
             NN.Train(iters);
 
-            /*for (int i = 0; i < m; i++)
-            {
-                for (int j = 0; j < n; j++)
-                {
-                    S[i, j] = rand.Next(3);
-                }
-            }*/
+            NN.Result();
 
-            // MessageBox.Show("Обучение завершено.", "Обучение", MessageBoxButtons.OK);
+            MessageBox.Show("Обучение завершено.", "Обучение", MessageBoxButtons.OK);
 
             S = NN.Result();
 
@@ -80,6 +84,16 @@ namespace MRL_2
             if (RForm.DialogResult == DialogResult.OK)
             {
                 Rules = RForm.GetR;
+
+                if (!Rules[0] && !Rules[1])
+                    acts = 3;
+                else if (!Rules[0] && Rules[1])
+                    acts = 4;
+                else if (Rules[0] && !Rules[1])
+                    acts = 4;
+                else if (Rules[0] && Rules[1])
+                    acts = 5;
+
             }
         }
 
@@ -95,7 +109,7 @@ namespace MRL_2
             }
         }
 
-        private void Form1_Paint(object sender, PaintEventArgs e) // Прорисовка поля; O обозначает завод первого этапа обработки, X — второго
+        private void Form1_Paint(object sender, PaintEventArgs e) // Прорисовка поля
         {
             int block;
 
@@ -107,7 +121,7 @@ namespace MRL_2
             if ((block - 12) <= 0)
                 return;
 
-            for(int i = 0; i <= n; i++)
+            for (int i = 0; i <= n; i++)
             {
                 e.Graphics.DrawLine(new Pen(Color.Black, 6), new Point(30, 53 + i * block), new Point(30 + m * block, 53 + i * block));
             }
@@ -116,25 +130,73 @@ namespace MRL_2
                 e.Graphics.DrawLine(new Pen(Color.Black, 6), new Point(30 + i * block, 50), new Point(30 + i * block, 56 + n * block));
             }
 
-            string texticon = " ";
-
             for(int i = 0; i < m; i++)
             {
                 for (int j = 0; j < n; j++)
                 {
-                    switch(S[i, j])
+                    if(!Rules[0] && !Rules[1])
                     {
-                        case 0:
-                            texticon = " ";
-                            break;
-                        case 1:
-                            texticon = "O";
-                            break;
-                        case 2:
-                            texticon = "X";
-                            break;
+                        switch (S[i, j])
+                        {
+                            case 2:
+                                e.Graphics.DrawImage(FirstF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                            case 1:
+                                e.Graphics.DrawImage(SecondF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                        }
                     }
-                    e.Graphics.DrawString(texticon, new Font("Arial", block - 12, GraphicsUnit.Pixel), new SolidBrush(Color.Black), 30 + 6 + i * block, 53 + 6 + j * block);
+
+                    else if (Rules[0] && !Rules[1])
+                    {
+                        switch (S[i, j])
+                        {
+                            case 3:
+                                e.Graphics.DrawImage(FirstF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                            case 2:
+                                e.Graphics.DrawImage(SecondF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                            case 1:
+                                e.Graphics.DrawImage(ThirdF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                        }
+                    }
+
+                    else if (!Rules[0] && Rules[1])
+                    {
+                        switch (S[i, j])
+                        {
+                            case 2:
+                                e.Graphics.DrawImage(FirstF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                            case 1:
+                                e.Graphics.DrawImage(SecondF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                            case 3:
+                                e.Graphics.DrawImage(Conveyor, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                        }
+                    }
+
+                    else if (Rules[0] && Rules[1])
+                    {
+                        switch (S[i, j])
+                        {
+                            case 3:
+                                e.Graphics.DrawImage(FirstF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                            case 2:
+                                e.Graphics.DrawImage(SecondF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                            case 1:
+                                e.Graphics.DrawImage(ThirdF, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                            case 4:
+                                e.Graphics.DrawImage(Conveyor, 30 + 6 + i * block, 53 + 6 + j * block, block - 12, block - 12);
+                                break;
+                        }
+                    }
                 }
             }
         }
@@ -146,7 +208,6 @@ namespace MRL_2
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
         }
     }
 }

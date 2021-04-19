@@ -12,7 +12,6 @@ namespace MRL_1
 {
     // Здесь представлена первая версия программы
 
-
     public partial class Form1 : Form
     {
         static Random rand = new Random();

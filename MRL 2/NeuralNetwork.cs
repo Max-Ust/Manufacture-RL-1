@@ -8,7 +8,7 @@ namespace MRL_2
 {
     class NeuralNetwork
     {
-        public const double E = 0.000001; // Момент
+        public const double E = 0.00001; // Момент
         public const double A = 0; // Скорость обучения
         public const double eps = 0.9; // Эпсилон
         public const double D = 0.9; // Дисконт фактор
@@ -28,13 +28,15 @@ namespace MRL_2
         InpN[] I;
 
         Neuron[][] H = new Neuron[2][];
-        int h = 16;
+        int h = 8;
 
         OutN[] O;
 
         static Random Rand = new Random();
 
-        public NeuralNetwork(int m, int n, int acts)
+        bool[] Rules;
+
+        public NeuralNetwork(int m, int n, int acts, bool[] Rule)
         {
             // Инициализация нейронов, весов и нейросети цели
 
@@ -90,6 +92,8 @@ namespace MRL_2
             ACTS = acts;
 
             TN = new TargetNetwork(W, M, N, ACTS, h);
+
+            this.Rules = Rule;
         }
         
 
@@ -111,11 +115,6 @@ namespace MRL_2
 
             for (int k = 0; k < h; k++)
             {
-                /*for (int j = 0; j < M * N; j++)
-                {
-                    sum += I[j].Outp() * W[0][j, i];
-                }*/
-
                 for (int i = 0; i < M; i++)
                 {
                     for (int j = 0; j < N; j++)
@@ -181,60 +180,552 @@ namespace MRL_2
         public int[,] Result()
         {
             int[,] State = new int[M, N];
+
+            double R;
+
+            double MaxR = 0;
+            int[,] MaxS = new int[M, N];
+
             bool end = false;
 
-            for (int j = 0; j < M * N; j++)
+            int[] Act = new int[3];
+
+            
+            Act[0] = 0;
+            Act[1] = 0;
+
+            bool CycleEnd = false;
+            bool ForEnd = false;
+
+            while (!CycleEnd)
             {
-                double[] Q = this.Calculate(State);
+                for(int k = 0; k < ACTS; k++)
+                {
+                    Act[2] = k;
 
-                Build(ref State, ARGMAX(Q), ref end);
+                    R = Build(ref State, Act, ref end);
 
-                if (end)
+                    if (R == 6)
+                        R = 6;
+
+                    if (R > MaxR)
+                    {
+                        for (int p = 0; p < M; p++)
+                        {
+                            for (int l = 0; l < N; l++)
+                            {
+                                MaxS[p, l] = State[p, l];
+                            }
+                        }
+
+                        MaxR = R;
+                    }
+                }
+
+                ForEnd = false;
+
+                for(int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if(i == 0 && j == 0)
+                        {
+                            continue;
+                        }
+
+                        if (State[i, j] < (ACTS - 1))
+                        {
+                            State[i, j]++;
+                            ForEnd = true;
+                            break;
+                        }
+
+                        if ((i != M - 1) || (j != N - 1))
+                        {
+                            State[i, j] = 0;
+
+                            continue;
+                        }
+                        if((i == M - 1) && (j == N - 1))
+                        {
+                            ForEnd = true;
+                            CycleEnd = true;
+                            break;
+                        }
+                    }
+
+                    if (ForEnd)
+                        break;
+                }
+
+                if (CycleEnd)
                     break;
             }
 
-            return State;
+            /*for(int k = 0; k < 100000000; k++)
+            {
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        State[i, j] = Rand.Next(3);
+                    }
+                }
+
+                Act[0] = 0;
+                Act[1] = 0;
+                Act[2] = Rand.Next(3);
+
+                R = Build(ref State, Act, ref end);
+
+                if (R > MaxR)
+                {
+                    for (int p = 0; p < M; p++)
+                    {
+                        for (int l = 0; l < N; l++)
+                        {
+                            MaxS[p, l] = State[p, l];
+                        }
+                    }
+
+                    MaxR = R;
+                }
+            }*/
+
+            /*for (int j = 0; j < M * N; j++)
+            {
+                double[] Q = this.Calculate(State);
+                Build(ref State, ARGMAX(Q), ref end);
+                if (end)
+                    break;
+            }*/
+
+            return MaxS;
         }
 
         // Построение и получение награды
         public double Build(ref int[,] State, int[] StateAct, ref bool end)
         {
             double Rs = 0;
-            bool earned;
-
             State[StateAct[0], StateAct[1]] = StateAct[2];
 
-            for (int i = 0; i < M; i++)
+            if(!Rules[0] && !Rules[1])
             {
-                for (int j = 0; j < N; j++)
+                bool earned;
+
+                for (int i = 0; i < M; i++)
                 {
-                    if (State[i, j] != 1)
-                        continue;
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] != 1)
+                            continue;
 
-                    earned = false;
+                        earned = false;
 
-                    if (!earned && i > 0 && State[i - 1, j] == 2)
-                        earned = true;
-                    if (!earned && j > 0 && State[i, j - 1] == 2)
-                        earned = true;
-                    if (!earned && i < M - 1 && State[i + 1, j] == 2)
-                        earned = true;
-                    if (!earned && j < N - 1 && State[i, j + 1] == 2)
-                        earned = true;
+                        if (!earned && i > 0 && State[i - 1, j] == 2)
+                            earned = true;
+                        if (!earned && j > 0 && State[i, j - 1] == 2)
+                            earned = true;
+                        if (!earned && i < M - 1 && State[i + 1, j] == 2)
+                            earned = true;
+                        if (!earned && j < N - 1 && State[i, j + 1] == 2)
+                            earned = true;
 
-                    if (earned)
-                        Rs++;
+                        if (earned)
+                            Rs++;
+                    }
+                }
+            }
+
+            else if(Rules[0] && !Rules[1])
+            {
+                int[] Path = new int[2];
+
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] != 1)
+                            continue;
+
+                        Path = new int[2];
+
+
+                        if (i > 0 && State[i - 1, j] == 2)
+                            Path[0] = -1;
+                        else if (j > 0 && State[i, j - 1] == 2)
+                            Path[1] = -1;
+                        else if (i < M - 1 && State[i + 1, j] == 2)
+                            Path[0] = 1;
+                        else if (j < N - 1 && State[i, j + 1] == 2)
+                            Path[1] = 1;
+
+                        if (Path[0] != 0 || Path[1] != 0)
+                        {
+                            i += Path[0];
+                            j += Path[1];
+
+                            if (i > 0 && State[i - 1, j] == 3)
+                                Rs++;
+                            else if (j > 0 && State[i, j - 1] == 3)
+                                Rs++;
+                            else if (i < M - 1 && State[i + 1, j] == 3)
+                                Rs++;
+                            else if (j < N - 1 && State[i, j + 1] == 3)
+                                Rs++;
+
+                            i -= Path[0];
+                            j -= Path[1];
+
+
+                        }
+                    }
+                }
+            }
+            
+            else if(!Rules[0] && Rules[1])
+            {
+                int I;
+                int J;
+
+                int[] Path = new int[2];
+
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] != 1)
+                            continue;
+
+                        
+                        if (i > 0 && State[i - 1, j] == 2)
+                        {
+                            Rs++;
+                            continue;
+                        }
+                        else if (j > 0 && State[i, j - 1] == 2)
+                        {
+                            Rs++;
+                            continue;
+                        }
+                        else if (i < M - 1 && State[i + 1, j] == 2)
+                        {
+                            Rs++;
+                            continue;
+                        }
+                        else if (j < N - 1 && State[i, j + 1] == 2)
+                        {
+                            Rs++;
+                            continue;
+                        }
+
+                        I = i;
+                        J = j;
+
+                        Path = new int[2];
+
+                        if (i > 0 && State[i - 1, j] == 3)
+                            i--;
+                        else if (j > 0 && State[i, j - 1] == 3)
+                            j--;
+                        else if (i < M - 1 && State[i + 1, j] == 3)
+                            i++;
+                        else if (j < N - 1 && State[i, j + 1] == 3)
+                            j++;
+                        else
+                            continue;
+                        
+                        for (int k = 0; k <= 10; k++)
+                        {
+                            if (i > 0 && State[i - 1, j] == 2)
+                            {
+                                Rs++;
+                                break;
+                            }    
+                            else if (j > 0 && State[i, j - 1] == 2)
+                            {
+                                Rs++;
+                                break;
+                            }
+                            else if (i < M - 1 && State[i + 1, j] == 2)
+                            {
+                                Rs++;
+                                break;
+                            }
+                            else if (j < N - 1 && State[i, j + 1] == 2)
+                            {
+                                Rs++;
+                                break;
+                            }
+
+                            else if (i > 0 && State[i - 1, j] == 3 && Path[0] != 1)
+                            {
+                                i--;
+                                Path[0] = -1;
+                            }
+                            else if (j > 0 && State[i, j - 1] == 3 && Path[1] != 1)
+                            {
+                                j--;
+                                Path[1] = -1;
+                            }
+                            else if (i < M - 1 && State[i + 1, j] == 3 && Path[0] != -1)
+                            {
+                                i++;
+                                Path[0] = 1;
+                            }
+                            else if (j < N - 1 && State[i, j + 1] == 3 && Path[1] != -1)
+                            {
+                                j++;
+                                Path[1] = 1;
+                            }
+
+                            else
+                                break;
+                        }
+
+                        i = I;
+                        j = J;
+                    }
+                }
+
+                for(int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] == 1 || State[i, j] == 2)
+                            Rs -= 0.1;
+                    }
+                }
+            }
+
+            else if (Rules[0] && Rules[1])
+            {
+                int I;
+                int J;
+
+                int[] Path = new int[2];
+
+                bool F = false;
+
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] != 1)
+                            continue;
+
+                        F = false;
+
+                        I = i;
+                        J = j;
+
+                        if (i > 0 && State[i - 1, j] == 2)
+                        {
+                            F = true;
+                            i--;
+                        }
+                        else if (j > 0 && State[i, j - 1] == 2)
+                        {
+                            F = true;
+                            j--;
+                        }
+                        else if (i < M - 1 && State[i + 1, j] == 2)
+                        {
+                            F = true;
+                            i++;
+                        }
+                        else if (j < N - 1 && State[i, j + 1] == 2)
+                        {
+                            F = true;
+                            j++;
+                        }
+
+                        Path = new int[2];
+
+                        if(!F)
+                        {
+                            if (i > 0 && State[i - 1, j] == 4)
+                                i--;
+                            else if (j > 0 && State[i, j - 1] == 4)
+                                j--;
+                            else if (i < M - 1 && State[i + 1, j] == 4)
+                                i++;
+                            else if (j < N - 1 && State[i, j + 1] == 4)
+                                j++;
+                            else
+                                continue;
+
+                            for (int k = 0; k <= 10; k++)
+                            {
+                                Path = new int[2];
+
+                                if (i > 0 && State[i - 1, j] == 2)
+                                {
+                                    F = true;
+                                    i--;
+                                    break;
+                                }
+                                else if (j > 0 && State[i, j - 1] == 2)
+                                {
+                                    F = true;
+                                    j--;
+                                    break;
+                                }
+                                else if (i < M - 1 && State[i + 1, j] == 2)
+                                {
+                                    F = true;
+                                    i++;
+                                    break;
+                                }
+                                else if (j < N - 1 && State[i, j + 1] == 2)
+                                {
+                                    F = true;
+                                    j++;
+                                    break;
+                                }
+
+                                else if (i > 0 && State[i - 1, j] == 4 && Path[0] != 1)
+                                {
+                                    i--;
+                                    Path[0] = -1;
+                                }
+                                else if (j > 0 && State[i, j - 1] == 4 && Path[1] != 1)
+                                {
+                                    j--;
+                                    Path[1] = -1;
+                                }
+                                else if (i < M - 1 && State[i + 1, j] == 4 && Path[0] != -1)
+                                {
+                                    i++;
+                                    Path[0] = 1;
+                                }
+                                else if (j < N - 1 && State[i, j + 1] == 4 && Path[1] != -1)
+                                {
+                                    j++;
+                                    Path[1] = 1;
+                                }
+
+                                else
+                                    break;
+                            }
+                        }
+
+                        if(F)
+                        {
+                            if (i > 0 && State[i - 1, j] == 3)
+                            {
+                                Rs++;
+                                i = I;
+                                j = J;
+                                continue;
+                            }
+                            else if (j > 0 && State[i, j - 1] == 3)
+                            {
+                                Rs++;
+                                i = I;
+                                j = J;
+                                continue;
+                            }
+                            else if (i < M - 1 && State[i + 1, j] == 3)
+                            {
+                                Rs++;
+                                i = I;
+                                j = J;
+                                continue;
+                            }
+                            else if (j < N - 1 && State[i, j + 1] == 3)
+                            {
+                                Rs++;
+                                i = I;
+                                j = J;
+                                continue;
+                            }
+
+                            Path = new int[2];
+
+                            if (i > 0 && State[i - 1, j] == 4)
+                                i--;
+                            else if (j > 0 && State[i, j - 1] == 4)
+                                j--;
+                            else if (i < M - 1 && State[i + 1, j] == 4)
+                                i++;
+                            else if (j < N - 1 && State[i, j + 1] == 4)
+                                j++;
+                            else
+                            {
+                                i = I;
+                                j = J;
+                                continue;
+                            }
+
+                            for (int k = 0; k <= 10; k++)
+                            {
+                                Path = new int[2];
+
+                                if (i > 0 && State[i - 1, j] == 3)
+                                {
+                                    Rs++;
+                                    break;
+                                }
+                                else if (j > 0 && State[i, j - 1] == 3)
+                                {
+                                    Rs++;
+                                    break;
+                                }
+                                else if (i < M - 1 && State[i + 1, j] == 3)
+                                {
+                                    Rs++;
+                                    break;
+                                }
+                                else if (j < N - 1 && State[i, j + 1] == 3)
+                                {
+                                    Rs++;
+                                    break;
+                                }
+
+                                if (i > 0 && State[i - 1, j] == 4 && Path[0] != 1)
+                                {
+                                    i--;
+                                    Path[0] = -1;
+                                }
+                                else if (j > 0 && State[i, j - 1] == 4 && Path[1] != 1)
+                                {
+                                    j--;
+                                    Path[1] = -1;
+                                }
+                                else if (i < M - 1 && State[i + 1, j] == 4 && Path[0] != -1)
+                                {
+                                    i++;
+                                    Path[0] = 1;
+                                }
+                                else if (j < N - 1 && State[i, j + 1] == 4 && Path[1] != -1)
+                                {
+                                    j++;
+                                    Path[1] = 1;
+                                }
+
+                                else
+                                    break;
+                            }
+                        }
+
+                        i = I;
+                        j = J;
+                    }
+                }
+
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] == 1 || State[i, j] == 2 || State[i, j] == 3)
+                            Rs -= 0.1;
+                    }
                 }
             }
 
             return Rs;
         }
-
-        /*public void BuildRes(ref int[,] State, int[] StateAct, ref bool end)
-        {
-            State[StateAct[0], StateAct[1]] = StateAct[2];
-        }*/
-
 
         // Тренировка нейросети
         public void Train(int iters)
@@ -298,19 +789,6 @@ namespace MRL_2
 
             double R;
             int[] Act = new int[3];
-
-            /*if (Rand.NextDouble() < eps) // Реализация эпсилон-жадности
-            {
-                Act[0] = Rand.Next(M);
-                Act[1] = Rand.Next(N);
-                Act[2] = Rand.Next(ACTS);
-            }
-            else
-            {
-                Act = ARGMAX(Q);
-            }
-
-            R = Build(ref State, Act, ref end);*/
 
             double[] Ideal = new double[M * N * ACTS];
 

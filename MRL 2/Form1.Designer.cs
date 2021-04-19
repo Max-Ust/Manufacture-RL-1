@@ -59,7 +59,7 @@
             this.параметрыПрограммыToolStripMenuItem.Name = "параметрыПрограммыToolStripMenuItem";
             this.параметрыПрограммыToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
             this.параметрыПрограммыToolStripMenuItem.Text = "Параметры программы";
-            // 
+
             // размерПоляToolStripMenuItem
             // 
             this.размерПоляToolStripMenuItem.Name = "размерПоляToolStripMenuItem";
