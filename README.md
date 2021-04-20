@@ -28,4 +28,5 @@ https://visualstudio.github.com/
 2) Перейдите в подпапку "MRL 2"
 3) Скопируйте файлы Conveyor.bmp, FirstFactory.bmp, SecondFactory.bmp и ThirdFactory.bmp
 4) Вставьте их в ту же подпапку по пути bin -> Debug
+
 После данных шагов проблема должна исчезнуть
