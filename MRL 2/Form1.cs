@@ -23,6 +23,9 @@ namespace MRL_2
 
         int[,] S;
 
+        bool[,] Allowed;
+        bool[,] Restricted;
+
         Image FirstF = Image.FromFile("FirstFactory.bmp");
         Image SecondF = Image.FromFile("SecondFactory.bmp");
         Image ThirdF = Image.FromFile("ThirdFactory.bmp");
@@ -40,19 +43,22 @@ namespace MRL_2
 
             Rules[0] = false;
             Rules[1] = false;
+
+            Allowed = new bool[m, n];
+            Restricted = new bool[m, n];
         }
 
         private void обучитьToolStripMenuItem_Click(object sender, EventArgs e) // Создание нейросети и ее обучение
         {
             S = new int[m, n];
 
-            NeuralNetwork NN = new NeuralNetwork(m, n, acts, Rules);
+            NeuralNetwork NN = new NeuralNetwork(m, n, acts, Rules, Allowed, Restricted);
 
-            NN.Train(iters);
+            //NN.Train(iters);
 
             NN.Result();
 
-            MessageBox.Show("Обучение завершено.", "Обучение", MessageBoxButtons.OK);
+            //MessageBox.Show("Обучение завершено.", "Обучение", MessageBoxButtons.OK);
 
             S = NN.Result();
 
@@ -70,6 +76,8 @@ namespace MRL_2
                 m = SZ.GetM;
                 n = SZ.GetN;
                 S = new int[m, n];
+                Allowed = new bool[m, n];
+                Restricted = new bool[m, n];
             }
 
             Invalidate();
@@ -94,7 +102,10 @@ namespace MRL_2
                 else if (Rules[0] && Rules[1])
                     acts = 5;
 
+                S = new int[m, n];
             }
+
+            Invalidate();
         }
 
         private void числоИтерацийToolStripMenuItem_Click(object sender, EventArgs e) // Окно изменения числа итераций
@@ -105,7 +116,7 @@ namespace MRL_2
 
             if (IForm.DialogResult == DialogResult.OK)
             {
-                iters = IForm.GetI;
+                iters = IForm.GetITER;
             }
         }
 
@@ -130,7 +141,23 @@ namespace MRL_2
                 e.Graphics.DrawLine(new Pen(Color.Black, 6), new Point(30 + i * block, 50), new Point(30 + i * block, 56 + n * block));
             }
 
-            for(int i = 0; i < m; i++)
+            for (int i = 0; i < m; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    if(Restricted[i , j])
+                    {
+                        e.Graphics.FillRectangle(new SolidBrush(Color.LightPink), 30 + 3 + i * block, 53 + 3 + j * block, block - 6, block - 6);
+                    }
+                    else if(Allowed[i, j])
+                    {
+                        e.Graphics.FillRectangle(new SolidBrush(Color.LightGreen), 30 + 3 + i * block, 53 + 3 + j * block, block - 6, block - 6);
+                    }
+                }
+            }
+
+
+            for (int i = 0; i < m; i++)
             {
                 for (int j = 0; j < n; j++)
                 {
@@ -208,6 +235,51 @@ namespace MRL_2
 
         private void Form1_Load(object sender, EventArgs e)
         {
+        }
+
+        private void Form1_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.X < 33 || e.Y < 56)
+                return;
+
+            int block;
+
+            if ((Size.Width - 60) / m < (Size.Height - 83) / n)
+                block = (Size.Width - 60) / m * 9 / 10;
+            else
+                block = ((Size.Height - 83) / n) * 9 / 10;
+
+            if ((block - 12) <= 0)
+                return;
+
+            int i = (e.X - 33) / block;
+            int j = (e.Y - 56) / block;
+
+            if (i < 0 || i >= m || j < 0 || j >= n)
+                return;
+
+            if(e.Button == MouseButtons.Left)
+            {
+                if (Allowed[i, j])
+                    Allowed[i, j] = false;
+                else
+                {
+                    Allowed[i, j] = true;
+                    Restricted[i, j] = false;
+                }
+            }
+            else if(e.Button == MouseButtons.Right)
+            {
+                if (Restricted[i, j])
+                    Restricted[i, j] = false;
+                else
+                {
+                    Restricted[i, j] = true;
+                    Allowed[i, j] = false;
+                }
+            }
+
+            Invalidate();
         }
     }
 }

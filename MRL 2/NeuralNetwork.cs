@@ -8,11 +8,11 @@ namespace MRL_2
 {
     class NeuralNetwork
     {
-        public const double E = 0.00001; // Момент
-        public const double A = 0; // Скорость обучения
-        public const double eps = 0.9; // Эпсилон
-        public const double D = 0.9; // Дисконт фактор
-        public const int TargetStep = 25; // Постоянная нейросети цели
+        const double E = 0.00001; // Момент
+        const double A = 0; // Скорость обучения
+        const double eps = 0.9; // Эпсилон
+        const double D = 0.9; // Дисконт фактор
+        const int TargetStep = 25; // Постоянная нейросети цели
 
         double[][,] W = new double[3][,]; // Вес
         double[][,] dW = new double[3][,]; // Величина изменения весов
@@ -35,8 +35,10 @@ namespace MRL_2
         static Random Rand = new Random();
 
         bool[] Rules;
+        bool[,] Allowed;
+        bool[,] Restricted;
 
-        public NeuralNetwork(int m, int n, int acts, bool[] Rule)
+        public NeuralNetwork(int m, int n, int acts, bool[] Rules, bool[,] Allowed, bool[,] Restricted)
         {
             // Инициализация нейронов, весов и нейросети цели
 
@@ -93,7 +95,9 @@ namespace MRL_2
 
             TN = new TargetNetwork(W, M, N, ACTS, h);
 
-            this.Rules = Rule;
+            this.Rules = Rules;
+            this.Allowed = Allowed;
+            this.Restricted = Restricted;
         }
         
 
@@ -204,9 +208,7 @@ namespace MRL_2
                     Act[2] = k;
 
                     R = Build(ref State, Act, ref end);
-
-                    if (R == 6)
-                        R = 6;
+                    
 
                     if (R > MaxR)
                     {
@@ -262,19 +264,19 @@ namespace MRL_2
                     break;
             }
 
-            /*for(int k = 0; k < 100000000; k++)
+            /*for(int k = 0; k < 10000; k++)
             {
                 for (int i = 0; i < M; i++)
                 {
                     for (int j = 0; j < N; j++)
                     {
-                        State[i, j] = Rand.Next(3);
+                        State[i, j] = Rand.Next(ACTS);
                     }
                 }
 
                 Act[0] = 0;
                 Act[1] = 0;
-                Act[2] = Rand.Next(3);
+                Act[2] = Rand.Next(ACTS);
 
                 R = Build(ref State, Act, ref end);
 
@@ -309,8 +311,26 @@ namespace MRL_2
             double Rs = 0;
             State[StateAct[0], StateAct[1]] = StateAct[2];
 
-            if(!Rules[0] && !Rules[1])
+            for (int i = 0; i < M; i++)
             {
+                for (int j = 0; j < N; j++)
+                {
+                    if (State[i, j] != 0 && Restricted[i, j])
+                        return -10;
+                }
+            }
+
+            if (!Rules[0] && !Rules[1])
+            {
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] == 2 && !Allowed[i, j])
+                            return -10;
+                    }
+                }
+
                 bool earned;
 
                 for (int i = 0; i < M; i++)
@@ -339,6 +359,15 @@ namespace MRL_2
 
             else if(Rules[0] && !Rules[1])
             {
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] == 3 && !Allowed[i, j])
+                            return -10;
+                    }
+                }
+
                 int[] Path = new int[2];
 
                 for (int i = 0; i < M; i++)
@@ -385,6 +414,15 @@ namespace MRL_2
             
             else if(!Rules[0] && Rules[1])
             {
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] == 2 && !Allowed[i, j])
+                            return -10;
+                    }
+                }
+
                 int I;
                 int J;
 
@@ -500,6 +538,15 @@ namespace MRL_2
 
             else if (Rules[0] && Rules[1])
             {
+                for (int i = 0; i < M; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (State[i, j] == 3 && !Allowed[i, j])
+                            return -10;
+                    }
+                }
+
                 int I;
                 int J;
 

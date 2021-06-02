@@ -12,7 +12,7 @@ namespace MRL_2
 {
     public partial class Iterations : Form
     {
-        int I;
+        int ITER;
 
         public Iterations()
         {
@@ -23,25 +23,25 @@ namespace MRL_2
         {
             InitializeComponent();
 
-            I = iter;
+            ITER = iter;
 
-            trackBar1.Value = I;
-            textBox1.Text = I.ToString();
+            trackBar1.Value = ITER;
+            textBox1.Text = ITER.ToString();
         }
 
-        public int GetI
+        public int GetITER
         {
             get
             {
-                return I;
+                return ITER;
             }
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
-            I = trackBar1.Value;
+            ITER = trackBar1.Value;
 
-            textBox1.Text = I.ToString();
+            textBox1.Text = ITER.ToString();
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
@@ -57,9 +57,9 @@ namespace MRL_2
                 MessageBox.Show("Введенное значение некорректно.");
             else
             {
-                I = i;
+                ITER = i;
 
-                trackBar1.Value = I;
+                trackBar1.Value = ITER;
             }
         }
     }

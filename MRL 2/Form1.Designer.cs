@@ -59,7 +59,7 @@
             this.параметрыПрограммыToolStripMenuItem.Name = "параметрыПрограммыToolStripMenuItem";
             this.параметрыПрограммыToolStripMenuItem.Size = new System.Drawing.Size(189, 24);
             this.параметрыПрограммыToolStripMenuItem.Text = "Параметры программы";
-
+            // 
             // размерПоляToolStripMenuItem
             // 
             this.размерПоляToolStripMenuItem.Name = "размерПоляToolStripMenuItem";
@@ -102,6 +102,7 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.SizeChanged += new System.EventHandler(this.Form1_SizeChanged);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
+            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseClick);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
